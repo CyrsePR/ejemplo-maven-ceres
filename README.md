@@ -1,4 +1,5 @@
 # Getting Started
+Ceres Francisca Olave
 
 ## Windows
 
