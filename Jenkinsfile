@@ -43,6 +43,7 @@ pipeline {
         }
         failure {
             sh "echo 'fase failure'"
+            sh "echo 'Francisca Olave'"
         }
     }
 }
