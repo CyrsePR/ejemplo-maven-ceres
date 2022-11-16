@@ -11,7 +11,7 @@ pipeline {
                 script {
                 sh "echo 'Compile Code!'"
                 // Run Maven on a Unix agent.
-                sh "./mvnn clean compile -e"
+                sh "./mvnw clean compile -e -DskipTest"
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
                 script {
                 sh "echo 'Build .Jar!'"
                 // Run Maven on a Unix agent.
-                sh "./mvnw clean package -e"
+                sh "./mvnw clean package -e -DskipTest"
                 }
             }
             post {
@@ -44,7 +44,7 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh "echo 'Calling sonar Service in another docker container!'"
                     // Run Maven on a Unix agent to execute Sonar.
-                    sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=custom-project-key -Dsonar.projectName=custom-project-key'
+                    sh './mvnw clean verify sonar:sonar'
                 }
             }
         }
