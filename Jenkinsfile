@@ -5,44 +5,179 @@ def jsonParse(def json) {
 }
 pipeline {
     agent any
+    environment {
+        channel='D04551B3BU3'
+        NEXUS_PASSWORD     = credentials('Z31@z@ILt@')
+    }
     stages {
-        stage("Paso 1: Saludar"){
+        
+        stage("Paso 0: Download Code and checkout"){
             steps {
-                script {
-                sh "echo 'Hello, World Usach!'"
+                script{
+                    checkout(
+                            [$class: 'GitSCM',
+                            //Acá reemplazar por el nonbre de branch
+                            branches: [[name: "feature/slack" ]],
+                            //Acá reemplazar por su propio repositorio
+                            userRemoteConfigs: [[url: 'https://github.com/CyrsePR/ejemplo-maven-ceres.git']]])
+                }
+            }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+     
+        stage("Paso 1: Build && Test"){
+            steps {
+                script{
+                    sh "echo 'Build && Test!'"
+                    env.STAGE='Paso 1'
+                    sh "./mvnw clean package -e"    
+                }
+            }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+
+        stage("Paso 2: Sonar - Análisis Estático"){
+            steps {
+                script{
+                    sh "echo 'Análisis Estático!'"}
+                    env.STAGE='Paso 2'
+                        withSonarQubeEnv('sonarqube') {
+                            sh "echo 'Calling sonar by ID!'"
+                            // Run Maven on a Unix agent to execute Sonar.
+                            sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=ejemplo-maven-full-stages -Dsonar.projectName=cejemplo-maven-full-stages -Dsonar.java.binaries=build'
+                        }      
+                }
+                post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
                 }
             }
         }
-        stage("Paso 2: Crear Archivo"){
+        
+        stage("Paso 3: Curl Springboot maven sleep 20"){
             steps {
-                script {
-                sh "echo 'Hello, World Usach!!' > hello-devops-usach-.txt"
+                script{
+                    env.STAGE='Paso 3'
+                    sh "nohup bash ./mvnw spring-boot:run  & >/dev/null"
+                    sh "sleep 20 && curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
-        stage("Paso 3: Guardar Archivo"){
+        stage("Paso 4: Detener Spring Boot"){
             steps {
-                script {
-                sh "echo 'Persisitir Archivo!'"
+                script{
+                    env.STAGE='Paso 4'
+                    sh '''
+                        echo 'Process Spring Boot Java: ' $(pidof java | awk '{print $1}')  
+                        sleep 20
+                        kill -9 $(pidof java | awk '{print $1}')
+                    '''
                 }
             }
-            post {
-                //record the test results and archive the jar file.
-                success {
-                    archiveArtifacts(artifacts:'**/*.txt', followSymlinks:false)
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+           stage("Paso 5: Subir Artefacto a Nexus"){
+            steps {
+                script{
+                    env.STAGE='Paso 5'
+                    nexusPublisher nexusInstanceId: 'nexus',
+                        nexusRepositoryId: 'maven-usach-ceres',
+                        packages: [
+                            [$class: 'MavenPackage',
+                                mavenAssetList: [
+                                    [classifier: '',
+                                    extension: 'jar',
+                                    filePath: 'build/DevOpsUsach2020-0.0.1.jar'
+                                ]
+                            ],
+                                mavenCoordinate: [
+                                    artifactId: 'DevOpsUsach2020',
+                                    groupId: 'com.devopsusach2020',
+                                    packaging: 'jar',
+                                    version: '0.0.1'
+                                ]
+                            ]
+                        ]
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+        stage("Paso 6: Descargar Nexus"){
+            steps {
+                script{
+                    env.STAGE='Paso 6'
+                    sh ' curl -X GET -u admin:$NEXUS_PASSWORD "http://nexus:8081/repository/maven-usach-ceres/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar" -O'
+                }
+            }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+         stage("Paso 7: Levantar Artefacto Jar en server Jenkins"){
+            steps {
+                script{
+                    env.STAGE='Paso 7'
+                    sh 'nohup java -jar DevOpsUsach2020-0.0.1.jar & >/dev/null'
+                }
+            }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+          stage("Paso 8: Testear Artefacto - Dormir(Esperar 20sg) "){
+            steps {
+                script{
+                    env.STAGE='Paso 8'
+                    sh "sleep 20 && curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
+                }
+            }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+        }
+        stage("Paso 9:Detener Atefacto jar en Jenkins server"){
+            steps {
+                script{
+                    env.STAGE='Paso 9'
+                    sh '''
+                        echo 'Process Java .jar: ' $(pidof java | awk '{print $1}')  
+                        sleep 20
+                        kill -9 $(pidof java | awk '{print $1}')
+                    '''
+                }
+            }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
     }
-    post {
-        always {
-            sh "echo 'fase always executed post'"
-        }
-        success {
-            sh "echo 'fase success'"
-        }
-        failure {
-            sh "echo 'fase failure'"
-        }
-    }
-}
