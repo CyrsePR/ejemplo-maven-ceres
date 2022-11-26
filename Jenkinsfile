@@ -36,7 +36,7 @@ pipeline {
             steps {
                 script {
                 env.STAGE='Paso 3: Guardar Archivo'
-                sh "echo 'Persisitir Archivo!'"
+                tsh "echo 'Persisitir Archivo!'"
                 }
             }
             post{
