@@ -37,7 +37,7 @@ pipeline {
         stage("Paso 2: Sonar - Análisis Estático"){
             steps {
                 script{
-                    sh "echo 'Análisis Estático!'"}
+                    sh "echo 'Análisis Estático!'"
                     env.STAGE='Paso 2'
                         withSonarQubeEnv('sonarqube') {
                             sh "echo 'Calling sonar by ID!'"
