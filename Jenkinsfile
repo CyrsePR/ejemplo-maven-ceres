@@ -97,14 +97,5 @@ pipeline {
                 }
             }
         }
-        stage("Paso 9:Detener Atefacto jar en Jenkins server"){
-            steps {
-                sh '''
-                    echo 'Process Java .jar: ' $(pidof java | awk '{print $1}')  
-                    sleep 20
-                    kill -9 $(pidof java | awk '{print $1}')
-                '''
-            }
-        }
     }
 }
