@@ -45,7 +45,6 @@ pipeline {
                             sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=ejemplo-maven-full-stages -Dsonar.projectName=cejemplo-maven-full-stages -Dsonar.java.binaries=build'
                         }      
                 }
-            }
         }
         
         stage("Paso 3: Curl Springboot maven sleep 20"){
@@ -131,3 +130,4 @@ pipeline {
             }
         }
     }
+}
