@@ -42,17 +42,7 @@ pipeline {
                 }
             }
         }
-        stage("Paso 4: Detener Spring Boot"){
-            steps {
-                script{
-                    sh '''
-                        echo 'Process Spring Boot Java: ' $(pidof java | awk '{print $1}')  
-                        sleep 20
-                    '''
-                }
-            }
-        }
-           stage("Paso 5: Subir Artefacto a Nexus"){
+           stage("Paso 4: Subir Artefacto a Nexus"){
             steps {
                 script{
                     nexusPublisher nexusInstanceId: 'nexus',
@@ -76,25 +66,34 @@ pipeline {
                 }
             }
         }
-        stage("Paso 6: Descargar Nexus"){
+        stage("Paso 5: Descargar Nexus"){
             steps {
                 script{
                     sh ' curl -X GET -u admin:Z31@z@ILt@ "http://nexus:8081/repository/maven-usach-ceres/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar" -O'
                 }
             }
         }
-         stage("Paso 7: Levantar Artefacto Jar en server Jenkins"){
+         stage("Paso 6: Levantar Artefacto Jar en server Jenkins"){
             steps {
                 script{
                     sh 'nohup java -jar DevOpsUsach2020-0.0.1.jar & >/dev/null'
                 }
             }
         }
-          stage("Paso 8: Testear Artefacto - Dormir(Esperar 20sg) "){
+          stage("Paso 7: Testear Artefacto - Dormir(Esperar 20sg) "){
             steps {
                 script{
                     sh "newman run ejemplo-maven.postman_collection.json"
                 }
+            }
+        }
+        stage("Paso 8:Detener Atefacto jar en Jenkins server"){
+            steps {
+                sh '''
+                    echo 'Process Java .jar: ' $(pidof java | awk '{print $1}')  
+                    sleep 20
+                    kill -9 $(pidof java | awk '{print $1}')
+                '''
             }
         }
     }
