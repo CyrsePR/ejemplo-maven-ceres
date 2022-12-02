@@ -22,6 +22,11 @@ pipeline {
                             userRemoteConfigs: [[url: 'https://github.com/CyrsePR/ejemplo-maven-ceres.git']]])
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
      
         stage("Paso 1: Build && Test"){
@@ -32,12 +37,17 @@ pipeline {
                     sh "./mvnw clean package -e"    
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
 
         stage("Paso 2: Sonar - Análisis Estático"){
             steps {
                 script{
-                    sh "echo 'Análisis Estático!'"
+                    sh "echo 'Análisis Estático!'"}
                     env.STAGE='Paso 2'
                         withSonarQubeEnv('sonarqube') {
                             sh "echo 'Calling sonar by ID!'"
@@ -45,6 +55,12 @@ pipeline {
                             sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=ejemplo-maven-full-stages -Dsonar.projectName=cejemplo-maven-full-stages -Dsonar.java.binaries=build'
                         }      
                 }
+                post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
+            }
         }
         
         stage("Paso 3: Curl Springboot maven sleep 20"){
@@ -55,6 +71,11 @@ pipeline {
                     sh "sleep 20 && curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
         stage("Paso 4: Detener Spring Boot"){
             steps {
@@ -67,6 +88,11 @@ pipeline {
                     '''
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
            stage("Paso 5: Subir Artefacto a Nexus"){
             steps {
@@ -92,6 +118,11 @@ pipeline {
                         ]
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
         stage("Paso 6: Descargar Nexus"){
             steps {
@@ -100,6 +131,11 @@ pipeline {
                     sh ' curl -X GET -u admin:$NEXUS_PASSWORD "http://nexus:8081/repository/maven-usach-ceres/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar" -O'
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
          stage("Paso 7: Levantar Artefacto Jar en server Jenkins"){
             steps {
@@ -108,14 +144,24 @@ pipeline {
                     sh 'nohup java -jar DevOpsUsach2020-0.0.1.jar & >/dev/null'
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
           stage("Paso 8: Testear Artefacto - Dormir(Esperar 20sg) "){
             steps {
                 script{
                     env.STAGE='Paso 8'
-                    sh "sleep 20 && newman run /tmp/ejemplo-maven.postman_collection.json"
+                    sh "sleep 20 && curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
         stage("Paso 9:Detener Atefacto jar en Jenkins server"){
             steps {
@@ -128,7 +174,10 @@ pipeline {
                     '''
                 }
             }
+            post{
+                failure{
+                    slackSend color: 'danger', message: "[Francisca Olave] - [Ejecucion fallida en stage [${env.STAGE}]"
+                    }
+                }
         }
     }
-    }
-}
