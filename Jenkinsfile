@@ -7,7 +7,7 @@ pipeline {
     agent any
     environment {
         channel='C04BPL2A5E3'
-        NEXUS_PASSWORD     = credentials('id-llamador')
+        NEXUS_PASSWORD     = credentials('nexus-password')
     }
     stages {
      
@@ -80,7 +80,7 @@ pipeline {
         stage("Paso 6: Descargar Nexus"){
             steps {
                 script{
-                    sh ' curl -X GET -u admin:$NEXUS_PASSWORD "http://nexus:8081/repository/maven-usach-ceres/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar" -O'
+                    sh ' curl -X GET -u admin:Z31@z@ILt@ "http://nexus:8081/repository/maven-usach-ceres/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar" -O'
                 }
             }
         }
