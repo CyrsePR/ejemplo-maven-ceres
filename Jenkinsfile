@@ -48,7 +48,6 @@ pipeline {
                     sh '''
                         echo 'Process Spring Boot Java: ' $(pidof java | awk '{print $1}')  
                         sleep 20
-                        kill -9 $(pidof java | awk '{print $1}')
                     '''
                 }
             }
