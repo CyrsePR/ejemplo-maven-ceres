@@ -94,7 +94,7 @@ pipeline {
           stage("Paso 8: Testear Artefacto - Dormir(Esperar 20sg) "){
             steps {
                 script{
-                    sh "sleep 20 && curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
+                    sh "sleep 20 && newman run ejemplo-maven.postman_collection -n 10  --delay-request 200'"
                 }
             }
         }
